@@ -39,7 +39,6 @@ contract PlanetNFT is ERC721, ERC721URIStorage, ERC721Enumerable, ERC2981, Ownab
     event CollaboratorAdded(address indexed collaborator);
     event CollaboratorRemoved(address indexed collaborator);
     event CollabNFTMinted(address indexed to, uint256 tokenId, string specialTrait);
-    event RoyaltiesWithdrawn(address indexed to, uint256 amount);
 
     modifier onlyCollaborator() {
         require(isCollaborator[msg.sender], "Not a collaborator");
@@ -53,44 +52,53 @@ contract PlanetNFT is ERC721, ERC721URIStorage, ERC721Enumerable, ERC2981, Ownab
         isCollaborator[_teamWallet] = true;
     }
 
-    // Public mint function
+    // Mint functions
     function mint() public payable whenNotPaused nonReentrant {
         require(msg.value >= MINT_PRICE, "Insufficient payment");
-        require(_tokenIdCounter.current() < MAX_SUPPLY - TEAM_RESERVE - COLLAB_RESERVE, "Max public supply reached");
+        require(_tokenIdCounter.current() < MAX_SUPPLY - TEAM_RESERVE - COLLAB_RESERVE, "Max supply reached");
 
         uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
-
         planetTypes[tokenId] = _random(4);
         rarityLevels[tokenId] = _calculateRarity(_random(100));
 
         _safeMint(msg.sender, tokenId);
+        _tokenIdCounter.increment();
     }
 
-    // Team mint functions
     function mintTeamReserve() public onlyOwner {
         require(!teamReserveMinted, "Team reserve already minted");
-        require(_tokenIdCounter.current() + TEAM_RESERVE <= MAX_SUPPLY, "Not enough supply");
-
         uint256 startId = _tokenIdCounter.current();
         
         for(uint256 i = 0; i < TEAM_RESERVE; i++) {
             uint256 tokenId = _tokenIdCounter.current();
-            _tokenIdCounter.increment();
-            
             planetTypes[tokenId] = _random(4);
             rarityLevels[tokenId] = 4; // Legendary
-            
             _safeMint(teamWallet, tokenId);
+            _tokenIdCounter.increment();
         }
 
         teamReserveMinted = true;
         emit TeamReserveMinted(teamWallet, startId, _tokenIdCounter.current() - 1);
     }
 
-    // Collaborator functions
+    function mintCollabNFT(address to, string memory specialTrait) public onlyCollaborator {
+        require(collabNFTsMinted < COLLAB_RESERVE, "Collab reserve depleted");
+        
+        uint256 tokenId = _tokenIdCounter.current();
+        collabNFTsMinted++;
+        
+        isCollabNFT[tokenId] = true;
+        collabSpecialTraits[tokenId] = specialTrait;
+        planetTypes[tokenId] = _random(4);
+        rarityLevels[tokenId] = 4; // Legendary
+        
+        _safeMint(to, tokenId);
+        _tokenIdCounter.increment();
+        emit CollabNFTMinted(to, tokenId, specialTrait);
+    }
+
+    // Admin functions
     function addCollaborator(address collaborator) public onlyOwner {
-        require(collaborator != address(0), "Invalid address");
         require(!isCollaborator[collaborator], "Already a collaborator");
         isCollaborator[collaborator] = true;
         emit CollaboratorAdded(collaborator);
@@ -103,51 +111,12 @@ contract PlanetNFT is ERC721, ERC721URIStorage, ERC721Enumerable, ERC2981, Ownab
         emit CollaboratorRemoved(collaborator);
     }
 
-    function mintCollabNFT(address to, string memory specialTrait) public onlyCollaborator {
-        require(collabNFTsMinted < COLLAB_RESERVE, "Collab reserve depleted");
-        
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
-        collabNFTsMinted++;
-        
-        isCollabNFT[tokenId] = true;
-        collabSpecialTraits[tokenId] = specialTrait;
-        planetTypes[tokenId] = _random(4);
-        rarityLevels[tokenId] = 4; // Legendary
-        
-        _safeMint(to, tokenId);
-        emit CollabNFTMinted(to, tokenId, specialTrait);
-    }
-
-    // Treasury management
+    // Treasury
     function withdrawRoyalties() public {
         require(msg.sender == teamWallet, "Only team wallet");
         uint256 balance = address(this).balance;
-        require(balance > 0, "No royalties to withdraw");
-        
         (bool success, ) = payable(teamWallet).call{value: balance}("");
         require(success, "Transfer failed");
-        
-        emit RoyaltiesWithdrawn(teamWallet, balance);
-    }
-
-    // Admin functions
-    function setTeamWallet(address newTeamWallet) public onlyOwner {
-        require(newTeamWallet != address(0), "Invalid address");
-        teamWallet = newTeamWallet;
-        _setDefaultRoyalty(newTeamWallet, ROYALTY_FEE);
-    }
-
-    function pause() public onlyOwner {
-        _pause();
-    }
-
-    function unpause() public onlyOwner {
-        _unpause();
-    }
-
-    function setBaseURI(string memory newBaseURI) public onlyOwner {
-        baseURI = newBaseURI;
     }
 
     // Internal functions
