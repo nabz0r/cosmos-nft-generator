@@ -1,0 +1,15 @@
+[features]
+seeds = false
+
+[programs.devnet]
+cosmos_nft = "your_program_id"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run mocha -t 1000000 tests/"
