@@ -1,57 +1,59 @@
 # 🪐 Cosmos NFT Generator
 
-Générateur de NFTs créant des planètes procédurales en pixel art 64x64 sur Solana.
+Un projet innovant qui génère des NFTs uniques en pixel art 64x64 représentant des planètes procédurales.
 
-## 🚀 Quick Start
+## 💫 Caractéristiques
+
+### Système de Rareté
+- Common (50%)
+- Uncommon (25%)
+- Rare (15%)
+- Epic (8%)
+- Legendary (2%)
+
+### Types de Planètes
+- Rocky
+- Ice
+- Gas Giant
+- Forest
+
+### Économie du Projet
+- Prix de mint : 1 SOL
+- Supply totale : 10,000 NFTs
+- Réserve équipe : 500 NFTs (5%)
+- Royalties : 5% sur les ventes secondaires
+
+## 🛠️ Stack Technique
+- Solana pour le mint et transactions
+- IPFS pour le stockage
+- Python pour la génération
+- NextJS pour le frontend
+
+## 🎮 Comment Participer
+
+### Mint Public
+1. Connectez votre wallet Solana
+2. Assurez-vous d'avoir 1 SOL + frais de gas
+3. Cliquez sur Mint
+
+### Marketplace
+- Possibilité d'acheter/vendre sur OpenSea
+- 5% de royalties sur chaque vente
+
+## 🏗️ Pour les Développeurs
 
 ```bash
-# Installer les dépendances
+# Installation
 npm install
 pip install -r requirements.txt
 
-# Configurer votre wallet Solana
-solana config set --url devnet
-solana-keygen new --outfile ~/.config/solana/devnet.json
+# Configuration
+cp .env.example .env
+# Remplir les variables d'environnement
 
-# Déployer le contrat
-anchor build
-anchor deploy
-
-# Lancer le frontend
-cd frontend
-npm run dev
+# Déploiement
+npx hardhat deploy --network mainnet
 ```
 
-## 🛠️ Architecture
-
-- `src/generator/`: Scripts de génération de planètes et métadonnées
-- `src/contracts/`: Smart contracts Solana
-- `src/frontend/`: Interface utilisateur Next.js
-
-## 🔑 Configuration
-
-```bash
-# .env
-SOLANA_NETWORK=devnet
-NFT_STORAGE_KEY=your_key
-PROGRAM_ID=your_program_id
-```
-
-## 📦 Déploiement
-
-1. Déployer le contrat sur Solana devnet
-2. Uploader les assets sur IPFS
-3. Configurer le frontend avec les bonnes variables
-
-## 🎨 Génération de NFTs
-
-```python
-from src.generator.batch_generator import BatchGenerator
-
-generator = BatchGenerator()
-generator.generate_batch(start_id=0, count=10)
-```
-
-## License
-
+## 📜 License
 MIT
