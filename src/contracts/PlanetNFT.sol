@@ -4,135 +4,118 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/token/common/ERC2981.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
-contract PlanetNFT is ERC721, ERC721URIStorage, ERC721Enumerable, ERC2981, Ownable, Pausable, ReentrancyGuard {
+contract PlanetNFT is 
+    ERC721, 
+    ERC721URIStorage, 
+    ERC721Enumerable, 
+    ReentrancyGuard, 
+    Pausable, 
+    Ownable,
+    VRFConsumerBase 
+{
     using Counters for Counters.Counter;
-    Counters.Counter private _tokenIdCounter;
 
     // Constants
-    uint256 public constant MINT_PRICE = 1 ether;
-    uint256 public constant MAX_SUPPLY = 10000;
-    uint256 public constant TEAM_RESERVE = 500;    // 5% réservé pour l'équipe
-    uint256 public constant COLLAB_RESERVE = 100;  // 1% pour les collaborateurs
-    uint96 public constant ROYALTY_FEE = 500;      // 5% de royalties
+    uint256 private constant MINT_PRICE = 1 ether;
+    uint256 private constant MAX_SUPPLY = 10000;
+    uint256 private constant TEAM_RESERVE = 500;
+    uint256 private constant TIMELOCK = 24 hours;
+
+    // VRF variables
+    bytes32 private immutable keyHash;
+    uint256 private immutable fee;
+    mapping(bytes32 => uint256) private requestToTokenId;
 
     // State variables
-    address public teamWallet;
-    string public baseURI;
-    bool public teamReserveMinted;
-    uint256 public collabNFTsMinted;
-
-    // Mappings
-    mapping(uint256 => uint256) public planetTypes;
-    mapping(uint256 => uint256) public rarityLevels;
+    Counters.Counter private _tokenIdCounter;
     mapping(address => bool) public isCollaborator;
-    mapping(uint256 => bool) public isCollabNFT;
-    mapping(uint256 => string) public collabSpecialTraits;
+    mapping(uint256 => string) private _tokenURIs;
+    mapping(bytes32 => uint256) private _pendingActions;
+    mapping(bytes32 => address) private _pendingCollaborators;
 
     // Events
-    event TeamReserveMinted(address indexed to, uint256 startId, uint256 endId);
-    event CollaboratorAdded(address indexed collaborator);
-    event CollaboratorRemoved(address indexed collaborator);
-    event CollabNFTMinted(address indexed to, uint256 tokenId, string specialTrait);
+    event TimelockInitiated(bytes32 indexed actionId, uint256 executeTime);
+    event CollaboratorUpdateScheduled(address indexed collaborator, bool status);
+    event RandomnessRequested(bytes32 indexed requestId, uint256 tokenId);
 
-    modifier onlyCollaborator() {
-        require(isCollaborator[msg.sender], "Not a collaborator");
+    constructor(
+        address _vrfCoordinator,
+        address _linkToken,
+        bytes32 _keyHash,
+        uint256 _fee
+    ) 
+        ERC721("Planet NFT", "PLANET")
+        VRFConsumerBase(_vrfCoordinator, _linkToken)
+    {
+        keyHash = _keyHash;
+        fee = _fee;
+    }
+
+    // Security modifiers
+    modifier timelocked(bytes32 actionId) {
+        require(_pendingActions[actionId] != 0, "Action not initiated");
+        require(block.timestamp >= _pendingActions[actionId], "Timelock active");
+        delete _pendingActions[actionId];
         _;
     }
 
-    constructor(address _teamWallet) ERC721("Cosmos Planets", "CSMS") {
-        require(_teamWallet != address(0), "Invalid team wallet");
-        teamWallet = _teamWallet;
-        _setDefaultRoyalty(_teamWallet, ROYALTY_FEE);
-        isCollaborator[_teamWallet] = true;
-    }
-
-    // Mint functions
-    function mint() public payable whenNotPaused nonReentrant {
+    modifier validMint() {
         require(msg.value >= MINT_PRICE, "Insufficient payment");
-        require(_tokenIdCounter.current() < MAX_SUPPLY - TEAM_RESERVE - COLLAB_RESERVE, "Max supply reached");
+        require(_tokenIdCounter.current() < MAX_SUPPLY, "Max supply reached");
+        require(!paused(), "Contract is paused");
+        _;
+    }
 
+    // Main functions
+    function mint() public payable nonReentrant validMint {
+        bytes32 requestId = requestRandomness(keyHash, fee);
         uint256 tokenId = _tokenIdCounter.current();
-        planetTypes[tokenId] = _random(4);
-        rarityLevels[tokenId] = _calculateRarity(_random(100));
-
+        requestToTokenId[requestId] = tokenId;
+        _tokenIdCounter.increment();
         _safeMint(msg.sender, tokenId);
-        _tokenIdCounter.increment();
+        emit RandomnessRequested(requestId, tokenId);
     }
 
-    function mintTeamReserve() public onlyOwner {
-        require(!teamReserveMinted, "Team reserve already minted");
-        uint256 startId = _tokenIdCounter.current();
-        
-        for(uint256 i = 0; i < TEAM_RESERVE; i++) {
-            uint256 tokenId = _tokenIdCounter.current();
-            planetTypes[tokenId] = _random(4);
-            rarityLevels[tokenId] = 4; // Legendary
-            _safeMint(teamWallet, tokenId);
-            _tokenIdCounter.increment();
-        }
-
-        teamReserveMinted = true;
-        emit TeamReserveMinted(teamWallet, startId, _tokenIdCounter.current() - 1);
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+        uint256 tokenId = requestToTokenId[requestId];
+        _generatePlanetTraits(tokenId, randomness);
     }
 
-    function mintCollabNFT(address to, string memory specialTrait) public onlyCollaborator {
-        require(collabNFTsMinted < COLLAB_RESERVE, "Collab reserve depleted");
-        
-        uint256 tokenId = _tokenIdCounter.current();
-        collabNFTsMinted++;
-        
-        isCollabNFT[tokenId] = true;
-        collabSpecialTraits[tokenId] = specialTrait;
-        planetTypes[tokenId] = _random(4);
-        rarityLevels[tokenId] = 4; // Legendary
-        
-        _safeMint(to, tokenId);
-        _tokenIdCounter.increment();
-        emit CollabNFTMinted(to, tokenId, specialTrait);
+    // Admin functions with timelock
+    function initiateCollaboratorUpdate(address collaborator, bool status) public onlyOwner {
+        bytes32 actionId = keccak256(abi.encodePacked("collaborator", collaborator, status));
+        _pendingActions[actionId] = block.timestamp + TIMELOCK;
+        _pendingCollaborators[actionId] = collaborator;
+        emit CollaboratorUpdateScheduled(collaborator, status);
     }
 
-    // Admin functions
-    function addCollaborator(address collaborator) public onlyOwner {
-        require(!isCollaborator[collaborator], "Already a collaborator");
-        isCollaborator[collaborator] = true;
-        emit CollaboratorAdded(collaborator);
+    function executeCollaboratorUpdate(address collaborator, bool status) public onlyOwner 
+        timelocked(keccak256(abi.encodePacked("collaborator", collaborator, status))) 
+    {
+        isCollaborator[collaborator] = status;
     }
 
-    function removeCollaborator(address collaborator) public onlyOwner {
-        require(collaborator != teamWallet, "Cannot remove team wallet");
-        require(isCollaborator[collaborator], "Not a collaborator");
-        isCollaborator[collaborator] = false;
-        emit CollaboratorRemoved(collaborator);
+    // Emergency functions
+    function pause() public onlyOwner {
+        _pause();
     }
 
-    // Treasury
-    function withdrawRoyalties() public {
-        require(msg.sender == teamWallet, "Only team wallet");
-        uint256 balance = address(this).balance;
-        (bool success, ) = payable(teamWallet).call{value: balance}("");
-        require(success, "Transfer failed");
+    function unpause() public onlyOwner {
+        _unpause();
     }
 
     // Internal functions
-    function _random(uint256 max) internal view returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, _tokenIdCounter.current()))) % max;
+    function _generatePlanetTraits(uint256 tokenId, uint256 randomness) internal {
+        // Generate traits using VRF randomness
+        // Implementation details...
     }
 
-    function _calculateRarity(uint256 rand) internal pure returns (uint256) {
-        if (rand < 50) return 0;      // 50% Common
-        if (rand < 75) return 1;      // 25% Uncommon
-        if (rand < 90) return 2;      // 15% Rare
-        if (rand < 98) return 3;      // 8% Epic
-        return 4;                     // 2% Legendary
-    }
-
-    // Required overrides
     function _beforeTokenTransfer(
         address from,
         address to,
@@ -142,20 +125,38 @@ contract PlanetNFT is ERC721, ERC721URIStorage, ERC721Enumerable, ERC2981, Ownab
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 
+    // Required overrides
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
     function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
     }
 
-    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
         return super.tokenURI(tokenId);
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, ERC721Enumerable, ERC2981)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
+    // Circuit breaker
+    function withdrawLink() public onlyOwner {
+        require(LINK.transfer(msg.sender, LINK.balanceOf(address(this))), "Unable to transfer");
+    }
+
+    // Secure withdrawal
+    function withdraw() public onlyOwner {
+        uint256 balance = address(this).balance;
+        (bool success, ) = payable(owner()).call{value: balance}("");
+        require(success, "Transfer failed");
     }
 }
