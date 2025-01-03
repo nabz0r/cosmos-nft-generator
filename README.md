@@ -1,95 +1,76 @@
 # 🪐 Cosmos NFT Generator
 
-Projet de génération de NFTs multi-chain créant des planètes uniques en pixel art 64x64.
+Générateur de NFTs multi-chain avec synchronisation cross-chain et analytics en temps réel.
 
-## 🚀 Nouveautés Multi-Chain
+## 🌐 Features
 
-### Supports
-- Solana (SOL)
-- Ethereum (ETH)
-- Polygon (MATIC)
+### Cross-Chain Support
+- Ethereum (0.1 ETH)
+- Polygon (100 MATIC)
+- Solana (1 SOL)
 
-### Prix de Mint
-- Solana: 1 SOL
-- Ethereum: 0.1 ETH
-- Polygon: 100 MATIC
+### Analytics & Monitoring
+- Statistiques en temps réel
+- Suivi des tendances
+- Analyses de rareté
 
-## 🌐 Distribution
+### Backend & API
+- Gestion des transactions
+- Synchronisation cross-chain
+- Cache Redis
 
-### Supply par Chain
-- Total: 10,000 NFTs par chain
-- Public: 9,400 NFTs (94%)
-- Team: 500 NFTs (5%)
-- Collaborateurs: 100 NFTs (1%)
+## 💻 Stack Technique
 
-### Royalties
-- 5% sur chaque marketplace
+### Frontend
+- Next.js
+- TailwindCSS
+- Web3 Integration
 
-## 💻 Installation
+### Backend
+- Node.js/Express
+- Redis
+- Prisma/PostgreSQL
+
+### Blockchain
+- Solana Web3.js
+- Ethers.js
+- IPFS
+
+## 🚀 Quick Start
 
 ```bash
 # Installation
 npm install
 
-# Configuration .env
-SOLANA_RPC=...
-ETH_RPC=...
-POLYGON_RPC=...
+# Configuration
+cp .env.example .env
+# Remplir les variables d'environnement
 
-# Démarrage
+# Démarrage Backend
+npm run start:api
+
+# Démarrage Frontend
 npm run dev
 ```
 
-## 📈 Roadmap
+## 📈 Analytics
 
-### Phase 1 - Base Technique (Terminé)
-- ✅ Générateur de planètes 64x64
-- ✅ Smart Contract Solana
-- ✅ Interface de mint basique
+```bash
+# Endpoint Analytics
+GET /api/analytics/mints    # Statistiques de mint
+GET /api/analytics/trends   # Tendances
+```
 
-### Phase 2 - Multi-Chain (En cours)
-- ✅ Intégration MetaMask
-- ✅ Smart Contract EVM
-- ✅ Support multi-wallet
-- 🟡 Bridging cross-chain (en développement)
+## 📑 Documentation
 
-### Phase 3 - Améliorations
-- ⏳ Amélioration du générateur
-- ⏳ Intégration IA avancée
-- ⏳ Système de staking multi-chain
+- [Guide Installation](docs/INSTALLATION.md)
+- [Guide Technique](docs/TECHNICAL.md)
+- [Guide API](docs/API.md)
 
-### Phase 4 - Social & Gaming
-- ⏳ Galerie cross-chain
-- ⏳ Système de fusion inter-chain
-- ⏳ Mini-jeu P2E
+## 👥 Contribution
 
-### Phase 5 - Expansion
-- ⏳ Nouveaux types de planètes
-- ⏳ Marketing et partenariats
-- ⏳ Version mobile
+Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour les détails.
 
-## 👥 Avantages Multi-Chain
+## 📜 License
 
-- Exposition maximale sur les marketplaces
-- Flexibilité pour les utilisateurs
-- Réduction des gas fees
-- Diversification des investissements
-
-## 💻 Stack Technique
-
-### Blockchain
-- Solana (Performance)
-- Ethereum (Sécurité)
-- Polygon (Gas fees réduits)
-
-### Frontend
-- Next.js
-- Wallet Adapters
-- ThreeJS
-
-### Backend
-- Node.js
-- IPFS
-
-## 📑 License
 MIT
