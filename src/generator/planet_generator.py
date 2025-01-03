@@ -51,26 +51,14 @@ class PlanetGenerator:
             draw.point((x, y), fill=(brightness, brightness, brightness))
 
     def generate(self):
-        # Create base image with space background
         image = Image.new('RGB', (self.size, self.size), self.colors['space'])
-        
-        # Add stars
         self.generate_stars(image)
         
-        # Generate planet
         planet_type = random.randint(0, len(self.colors['planets']) - 1)
         planet_radius = random.randint(self.size//4, self.size//3)
         center = (self.size//2, self.size//2)
         
-        # Create base planet
-        self.generate_base_circle(
-            image, 
-            center, 
-            planet_radius, 
-            self.colors['planets'][planet_type][0]
-        )
-        
-        # Add surface details
+        self.generate_base_circle(image, center, planet_radius, self.colors['planets'][planet_type][0])
         self.add_surface_details(image, planet_type)
         
         return image
@@ -81,6 +69,5 @@ class PlanetGenerator:
         return filename
 
 if __name__ == "__main__":
-    # Test generation
     generator = PlanetGenerator(64)
     generator.save_planet("test_planet.png")
