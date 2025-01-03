@@ -1,27 +1,26 @@
-# Guide des Collaborateurs Cosmos NFT
-
-## Accès Collaborateur
-
-1. Votre adresse doit être ajoutée par l'équipe
-2. Vous recevez des droits de mint spéciaux
-3. Accès aux traits uniques
-
-## Minting Special NFTs
-
-1. Connectez votre wallet enregistré
-2. Utilisez la fonction mintCollabNFT
-3. Spécifiez les traits uniques
-
-## Traits Spéciaux
-
-- Badges personnalisés
-- Couleurs uniques
-- Attributs exclusifs
-- Métadonnées customisées
+# Guide Collaborateur
 
 ## Avantages
 
-- NFTs Legendary garantis
-- Identification spéciale
-- Traits uniques
-- Possibilité de distribution
+### NFTs Spéciaux
+- Rareté Legendary garantie
+- Traits uniques exclusifs
+- Badge collaborateur
+
+### Droits
+- Mint de NFTs spéciaux
+- Attribution de traits uniques
+- Accès anticipé aux nouvelles features
+
+## Comment Minter
+
+1. Connexion avec wallet approuvé
+2. Accès au panel collaborateur
+3. Choix des traits spéciaux
+4. Mint gratuit
+
+## Restrictions
+
+- Maximum 100 NFTs collaborateurs
+- Un trait spécial par NFT
+- Wallet vérifié nécessaire
