@@ -1,83 +1,95 @@
 # 🪐 Cosmos NFT Generator
 
-Générateur de NFTs procéduraux de planètes en pixel art 64x64 sur Solana.
+Projet de génération de NFTs multi-chain créant des planètes uniques en pixel art 64x64.
 
-## ⚡ Tokenomics & Distribution
+## 🚀 Nouveautés Multi-Chain
 
-- **Supply Totale**: 10,000 NFTs
-- **Prix de Mint**: 1 SOL
-- **Distribution**:
-  - Public: 9,400 NFTs (94%)
-  - Team: 500 NFTs (5%)
-  - Collaborateurs: 100 NFTs (1%)
-- **Royalties**: 5% sur ventes secondaires
+### Supports
+- Solana (SOL)
+- Ethereum (ETH)
+- Polygon (MATIC)
 
-## 🎨 Types de NFTs
+### Prix de Mint
+- Solana: 1 SOL
+- Ethereum: 0.1 ETH
+- Polygon: 100 MATIC
 
-### NFTs Standards
-**Rareté**:
-- Common: 50%
-- Uncommon: 25%
-- Rare: 15%
-- Epic: 8%
-- Legendary: 2%
+## 🌐 Distribution
 
-**Types de Planètes**:
-- Rocky
-- Ice
-- Gas Giant
-- Forest
+### Supply par Chain
+- Total: 10,000 NFTs par chain
+- Public: 9,400 NFTs (94%)
+- Team: 500 NFTs (5%)
+- Collaborateurs: 100 NFTs (1%)
 
-### NFTs Spéciaux
-**Team NFTs**:
-- Tous de rareté Legendary
-- Badges spéciaux Team
-- Traits uniques
+### Royalties
+- 5% sur chaque marketplace
 
-**Collaborator NFTs**:
-- Rareté Legendary garantie
-- Traits personnalisés
-- Badges Collaborateur
-- Métadonnées spéciales
-
-## 🛠 Installation
+## 💻 Installation
 
 ```bash
-# Installation des dépendances
+# Installation
 npm install
-pip install -r requirements.txt
 
-# Configuration
-cp .env.example .env
-# Éditer .env avec votre wallet_address et vos clés API
-```
+# Configuration .env
+SOLANA_RPC=...
+ETH_RPC=...
+POLYGON_RPC=...
 
-## 🚀 Déploiement
-
-```bash
-# Déploiement sur Solana devnet
-solana config set --url devnet
-anchor deploy
-
-# Lancer le frontend
-cd frontend
+# Démarrage
 npm run dev
 ```
 
-## 👥 Gestion des Collaborateurs
+## 📈 Roadmap
 
-### Ajout d'un collaborateur
-```solidity
-// Via le smart contract
-addCollaborator(address collaborator)
-```
+### Phase 1 - Base Technique (Terminé)
+- ✅ Générateur de planètes 64x64
+- ✅ Smart Contract Solana
+- ✅ Interface de mint basique
 
-### Mint Collaborateur
-```solidity
-// Mint un NFT spécial
-mintCollabNFT(address to, string specialTrait)
-```
+### Phase 2 - Multi-Chain (En cours)
+- ✅ Intégration MetaMask
+- ✅ Smart Contract EVM
+- ✅ Support multi-wallet
+- 🟡 Bridging cross-chain (en développement)
 
-## 📜 License
+### Phase 3 - Améliorations
+- ⏳ Amélioration du générateur
+- ⏳ Intégration IA avancée
+- ⏳ Système de staking multi-chain
 
+### Phase 4 - Social & Gaming
+- ⏳ Galerie cross-chain
+- ⏳ Système de fusion inter-chain
+- ⏳ Mini-jeu P2E
+
+### Phase 5 - Expansion
+- ⏳ Nouveaux types de planètes
+- ⏳ Marketing et partenariats
+- ⏳ Version mobile
+
+## 👥 Avantages Multi-Chain
+
+- Exposition maximale sur les marketplaces
+- Flexibilité pour les utilisateurs
+- Réduction des gas fees
+- Diversification des investissements
+
+## 💻 Stack Technique
+
+### Blockchain
+- Solana (Performance)
+- Ethereum (Sécurité)
+- Polygon (Gas fees réduits)
+
+### Frontend
+- Next.js
+- Wallet Adapters
+- ThreeJS
+
+### Backend
+- Node.js
+- IPFS
+
+## 📑 License
 MIT
