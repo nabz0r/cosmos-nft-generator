@@ -85,15 +85,14 @@ npm run dev
 - [Guide Technique](docs/TECHNICAL.md)
 - [Guide API](docs/API.md)
 
-## 👥 Contribution
+🤝 Contribution
+We Welcome:
+💻 Network Engineers
+👀 Research Scientists
+🌎 Cloud Architects
+🤖 AI/ML Specialists
+📞 Contact
+Email: nabz0r@gmail.com GitHub: @nabz0r
 
-Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour les détails.
-
-## 📜 License & Copyright
-
-MIT License
-
-Copyright (c) 2024 nabz0r (nabz0r@gmail.com)
-GitHub: https://github.com/nabz0r
-
-Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+📜 License
+MIT License - Innovation without Boundaries
