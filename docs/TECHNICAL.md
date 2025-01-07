@@ -1,17 +1,5 @@
 # Documentation Technique
 
-## Architecture Générale
-
-```mermaid
-flowchart TD
-    Client[Client] --> FE[Frontend]
-    FE --> API[Backend API]
-    API --> BC[Blockchain]
-    API --> IPFS[IPFS Storage]
-    API --> Redis[(Redis Cache)]
-    API --> ELK[Monitoring]
-```
-
 ## Smart Contract
 
 ### Fonctions d'Urgence
@@ -27,9 +15,22 @@ unpause() public onlyOwner
 ```solidity
 event EmergencyPause(address indexed trigger);
 event EmergencyUnpause(address indexed trigger);
+event RoyaltyUpdated(address receiver, uint96 feeNumerator);
 ```
 
-## Backend Sécurité
+### Système de Royalties (EIP-2981)
+```solidity
+// Définit les royalties pour un token spécifique
+function setTokenRoyalty(uint256 tokenId, address recipient, uint96 fraction) external onlyOwner
+
+// Définit les royalties par défaut
+function setDefaultRoyalty(address recipient, uint96 fraction) external onlyOwner
+
+// Supprime les royalties par défaut
+function deleteDefaultRoyalty() external onlyOwner
+```
+
+## Backend
 
 ### Rate Limiting
 ```javascript
@@ -38,26 +39,6 @@ const mintLimiter = rateLimit({
     max: 5, // 5 mints par heure
     store: redisStore
 });
-```
-
-### Validation Métadonnées
-```javascript
-const validateMetadata = (metadata) => {
-    // Vérification des champs requis
-    const required = ['name', 'description', 'image'];
-    const errors = [];
-    
-    // Vérification des attributs
-    if (metadata.attributes) {
-        metadata.attributes.forEach((attr) => {
-            if (!attr.trait_type || !attr.value) {
-                errors.push('Invalid attribute');
-            }
-        });
-    }
-    
-    return { valid: errors.length === 0, errors };
-};
 ```
 
 ### Monitoring
@@ -77,6 +58,24 @@ const monitorTransaction = async (txHash, chain) => {
 };
 ```
 
+### Tests Unitaires
+```javascript
+describe('Royalties (EIP-2981)', function() {
+    it('Should return correct royalty info', async function() {
+        const [receiver, amount] = await cosmosNFT.royaltyInfo(tokenId, salePrice);
+        expect(receiver).to.equal(owner.address);
+        expect(amount).to.equal(salePrice.mul(250).div(10000)); // 2.5%
+    });
+});
+
+describe('Pause Emergency System', function() {
+    it('Should pause all operations', async function() {
+        await cosmosNFT.pause();
+        expect(await cosmosNFT.paused()).to.equal(true);
+    });
+});
+```
+
 ## Frontend
 
 ### Configuration
@@ -91,12 +90,16 @@ const config = {
 ### Intégration Wallet
 ```typescript
 import { useWallet } from '@solana/wallet-adapter-react';
+
+// Connexion wallet
 const { wallet, connect } = useWallet();
 ```
 
 ## Sécurité
+
 - Protection contre la réentrance
 - Système de pause d'urgence
+- Gestion des royalties (EIP-2981)
 - Rate limiting distribué
 - Validation IPFS
 - Monitoring transactions
