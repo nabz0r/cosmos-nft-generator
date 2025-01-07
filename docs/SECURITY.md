@@ -13,6 +13,34 @@ flowchart TD
     Monitor --> Blockchain[Blockchain]
 ```
 
+## Smart Contract Sécurité
+
+### Mécanisme de Pause
+```mermaid
+sequenceDiagram
+    participant Owner
+    participant Contract
+    participant User
+    
+    Owner->>Contract: pause()
+    Contract-->>Contract: _pause()
+    Contract-->>Contract: emit EmergencyPause
+    User->>Contract: mint()
+    Contract-->>User: revert "Pausable: paused"
+```
+
+### Système de Royalties
+```mermaid
+sequenceDiagram
+    participant Owner
+    participant Contract
+    participant Marketplace
+    
+    Owner->>Contract: setDefaultRoyalty(2.5%)
+    Marketplace->>Contract: royaltyInfo(tokenId, price)
+    Contract-->>Marketplace: [receiver, amount]
+```
+
 ## Rate Limiting
 
 ```mermaid
@@ -55,6 +83,14 @@ sequenceDiagram
 ```
 
 ## Implémentations
+
+### Smart Contract
+- Mécanisme de pause d'urgence
+- Standards implémentés :
+  - ERC721
+  - ERC2981 (Royalties)
+- Tests exhaustifs
+- Protection contre la réentrance
 
 ### Rate Limiting
 - Limitation globale : 100 requêtes/15min/IP
