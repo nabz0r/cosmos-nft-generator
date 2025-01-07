@@ -1,82 +1,58 @@
-import express from 'express';
-import cors from 'cors';
-import { ethers } from 'ethers';
-import { Connection } from '@solana/web3.js';
-import { TransactionManager } from '../services/TransactionManager';
-import { AnalyticsService } from '../services/AnalyticsService';
-import { ChainSyncService } from '../services/ChainSyncService';
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const { limiter, mintLimiter } = require('../middleware/rateLimiter');
+const { validateMetadata, validateIPFSHash } = require('../middleware/metadataValidator');
+const { logger, monitorTransaction } = require('../services/monitoring');
 
 const app = express();
+
+// Security middleware
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(limiter);
 
-// Services initialization
-const transactionManager = new TransactionManager();
-const analyticsService = new AnalyticsService();
-const chainSyncService = new ChainSyncService();
-
-// Mint endpoints
-app.post('/api/mint', async (req, res) => {
+// Routes
+app.post('/api/mint', mintLimiter, async (req, res) => {
     try {
-        const { chainType, walletAddress, tokenId } = req.body;
-        const mintResult = await transactionManager.processMint(chainType, walletAddress, tokenId);
-        res.json(mintResult);
+        const { metadata, ipfsHash } = req.body;
+
+        // Validate metadata
+        const metadataValidation = validateMetadata(metadata);
+        if (!metadataValidation.valid) {
+            return res.status(400).json({ errors: metadataValidation.errors });
+        }
+
+        // Validate IPFS hash
+        if (!validateIPFSHash(ipfsHash)) {
+            return res.status(400).json({ error: 'Invalid IPFS hash' });
+        }
+
+        // Process mint transaction
+        const txHash = await mintNFT(metadata, ipfsHash);
+        
+        // Monitor transaction
+        monitorTransaction(txHash, req.body.chain)
+            .catch(error => logger.error('Transaction monitoring failed', { error }));
+
+        res.json({ txHash });
     } catch (error) {
-        console.error('Mint error:', error);
-        res.status(500).json({ error: error.message });
+        logger.error('Mint failed', { error: error.message });
+        res.status(500).json({ error: 'Mint failed' });
     }
 });
 
-// Transaction status
-app.get('/api/transaction/:chainType/:txHash', async (req, res) => {
+app.get('/api/status', async (req, res) => {
     try {
-        const { chainType, txHash } = req.params;
-        const status = await transactionManager.getTransactionStatus(chainType, txHash);
+        const { txHash, chain } = req.query;
+        const status = await monitorTransaction(txHash, chain);
         res.json(status);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Status check failed' });
     }
 });
 
-// Analytics endpoints
-app.get('/api/analytics/mints', async (req, res) => {
-    try {
-        const stats = await analyticsService.getMintStats();
-        res.json(stats);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.get('/api/analytics/trends', async (req, res) => {
-    try {
-        const trends = await analyticsService.getTrends();
-        res.json(trends);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Chain sync endpoints
-app.get('/api/sync/status', async (req, res) => {
-    try {
-        const status = await chainSyncService.getSyncStatus();
-        res.json(status);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/sync/force', async (req, res) => {
-    try {
-        const result = await chainSyncService.forceSyncAll();
-        res.json(result);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+    logger.info(`Server running on port ${process.env.PORT}`);
 });
