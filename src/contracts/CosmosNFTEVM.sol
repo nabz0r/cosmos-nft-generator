@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -10,13 +11,14 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
-contract CosmosNFTEVM is ERC721URIStorage, ERC721Enumerable, ReentrancyGuard, Ownable, VRFConsumerBase, Pausable {
+contract CosmosNFTEVM is ERC721URIStorage, ERC721Enumerable, ERC2981, ReentrancyGuard, Ownable, VRFConsumerBase, Pausable {
     using Strings for uint256;
 
     uint256 public constant MINT_PRICE = 0.1 ether;
     uint256 public constant MAX_SUPPLY = 10000;
     uint256 public constant TEAM_RESERVE = 500;
     uint256 public constant COLLAB_RESERVE = 100;
+    uint96 public constant ROYALTY_FEE = 250; // 2.5%
 
     bytes32 private keyHash;
     uint256 private fee;
@@ -36,6 +38,7 @@ contract CosmosNFTEVM is ERC721URIStorage, ERC721Enumerable, ReentrancyGuard, Ow
     event PlanetRevealed(uint256 indexed tokenId, uint8 planetType, uint8 rarity);
     event EmergencyPause(address indexed trigger);
     event EmergencyUnpause(address indexed trigger);
+    event RoyaltyUpdated(address receiver, uint96 feeNumerator);
     
     constructor(
         address _vrfCoordinator,
@@ -47,6 +50,7 @@ contract CosmosNFTEVM is ERC721URIStorage, ERC721Enumerable, ReentrancyGuard, Ow
     {
         keyHash = _keyHash;
         fee = 0.1 * 10**18;
+        _setDefaultRoyalty(msg.sender, ROYALTY_FEE);
     }
 
     function mint() public payable nonReentrant whenNotPaused {
@@ -59,21 +63,6 @@ contract CosmosNFTEVM is ERC721URIStorage, ERC721Enumerable, ReentrancyGuard, Ow
         
         _safeMint(msg.sender, tokenId);
         emit MintRequested(msg.sender, requestId);
-    }
-    
-    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override whenNotPaused {
-        uint256 tokenId = requestToTokenId[requestId];
-        
-        uint8 planetType = uint8(randomness % 4);
-        uint8 rarity = _calculateRarity(uint8((randomness >> 8) % 100));
-        
-        planetAttributes[tokenId] = PlanetAttributes({
-            planetType: planetType,
-            rarity: rarity,
-            specialTrait: ""
-        });
-        
-        emit PlanetRevealed(tokenId, planetType, rarity);
     }
     
     function mintCollabNFT(address to, string memory specialTrait) public whenNotPaused {
@@ -89,6 +78,20 @@ contract CosmosNFTEVM is ERC721URIStorage, ERC721Enumerable, ReentrancyGuard, Ow
         
         isCollabNFT[tokenId] = true;
         _safeMint(to, tokenId);
+    }
+
+    function setTokenRoyalty(uint256 tokenId, address recipient, uint96 fraction) external onlyOwner {
+        _setTokenRoyalty(tokenId, recipient, fraction);
+        emit RoyaltyUpdated(recipient, fraction);
+    }
+
+    function setDefaultRoyalty(address recipient, uint96 fraction) external onlyOwner {
+        _setDefaultRoyalty(recipient, fraction);
+        emit RoyaltyUpdated(recipient, fraction);
+    }
+
+    function deleteDefaultRoyalty() external onlyOwner {
+        _deleteDefaultRoyalty();
     }
 
     function pause() public onlyOwner {
@@ -135,20 +138,20 @@ contract CosmosNFTEVM is ERC721URIStorage, ERC721Enumerable, ReentrancyGuard, Ow
         return string(abi.encodePacked("data:application/json;base64,", json));
     }
 
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable, ERC2981)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
     function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
         internal
         override(ERC721, ERC721Enumerable)
         whenNotPaused
     {
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, ERC721Enumerable)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
     }
 }
