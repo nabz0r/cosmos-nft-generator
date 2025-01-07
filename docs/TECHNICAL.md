@@ -2,17 +2,33 @@
 
 ## Smart Contract
 
+### Fonctions d'Urgence
+
+```solidity
+// Pause toutes les opérations du contrat
+pause() public onlyOwner
+
+// Réactive les opérations du contrat
+unpause() public onlyOwner
+```
+
+### Events
+```solidity
+event EmergencyPause(address indexed trigger);
+event EmergencyUnpause(address indexed trigger);
+```
+
 ### Fonctions Principales
 
 ```solidity
 // Mint public
-mint() public payable
+mint() public payable whenNotPaused
 
 // Mint team
-mintTeamReserve() public onlyOwner
+mintTeamReserve() public onlyOwner whenNotPaused
 
 // Mint collaborateur
-mintCollabNFT(address to, string specialTrait) public onlyCollaborator
+mintCollabNFT(address to, string specialTrait) public whenNotPaused onlyCollaborator
 ```
 
 ### Système de Rareté
@@ -51,6 +67,7 @@ const { wallet, connect } = useWallet();
 ## Sécurité
 
 - Protection contre la réentrance
-- Système de pause
+- Système de pause d'urgence
 - Gestion des royalties
 - Contrôle des collaborateurs
+- Protection contre le spam
