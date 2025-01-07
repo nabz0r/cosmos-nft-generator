@@ -81,18 +81,60 @@ npm run dev
 
 ## 📑 Documentation
 
+### Guides
 - [Guide Installation](docs/INSTALLATION.md)
 - [Guide Technique](docs/TECHNICAL.md)
 - [Guide API](docs/API.md)
+- [Guide Utilisateur](docs/USER_GUIDE.md)
+- [Guide Frontend](docs/FRONTEND_GUIDE.md)
+- [Guide Collaborateur](docs/COLLABORATOR_GUIDE.md)
 
-🤝 Contribution
+### Technique
+- [Documentation API](docs/API.md)
+- [Architecture Backend](docs/BACKEND.md)
+- [Architecture Frontend](docs/FRONTEND.md)
+- [Système de Génération](docs/GENERATION_SYSTEM.md)
+- [Support Multi-Chain](docs/MULTI_CHAIN.md)
+- [Sécurité](docs/SECURITY.md)
+- [Détails Techniques](docs/TECHNICAL_DETAILS.md)
+- [Guide Déploiement](docs/DEPLOYMENT.md)
+
+## 🗺️ Roadmap
+
+### Phase 1 - Achevée ✅
+- Smart Contract V1
+- Frontend de base
+- Backend API
+- Génération planètes 64x64
+
+### Phase 2 - En cours 🔄
+- Système de pause d'urgence
+- Sécurité backend (Rate limiting, Validation, Monitoring)
+- Optimisation gas
+
+### Phase 3 - À venir 🎯
+- Migration vers microservices
+- Cache distribué
+- Résolution 128x128
+- Animation NFTs
+- CI/CD & Tests
+
+### Phase 4 - Planifiée 📋
+- Interface admin
+- Analytics avancés
+- Marketplace
+- DAO gouvernance
+
+## 🤝 Contribution
 We Welcome:
 💻 Network Engineers
 👀 Research Scientists
 🌎 Cloud Architects
 🤖 AI/ML Specialists
-📞 Contact
-Email: nabz0r@gmail.com GitHub: @nabz0r
 
-📜 License
+## 📞 Contact
+Email: nabz0r@gmail.com
+GitHub: @nabz0r
+
+## 📜 License
 MIT License - Innovation without Boundaries
